@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Name="AugmentedBoardGame" Path="AugmentedBoardGame" Type="App">
+  <References>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="protobuf-net" />
+    <Reference Include="Protoinject" />
+    <Reference Include="MonoGame.Framework" />
+    <Reference Include="Protogame" />
+    <Reference Include="Protogame.ThirdParty" />
+    <Reference Include="Protogame.EntryPoint" />
+    <Reference Include="AugmentedBoardGame.Content" />
+    <Reference Include="DirectShowLib" />
+  </References>
+  <Files>
+    <Compile Include="AugmentedBoardGameGame.cs" />
+    <Compile Include="AugmentedBoardGameGameConfiguration.cs" />
+    <Compile Include="AugmentedBoardGameModule.cs" />
+    <Compile Include="AugmentedBoardGameWorld.cs" />
+    <Compile Include="ExampleEntity.cs" />
+    <Compile Include="IEntityFactory.cs" />
+    <Compile Include="Resources\Resource.Designer.cs">
+      <Platforms>Android,Ouya</Platforms>
+    </Compile>
+    <Compile Include="Webcam\WebcamEntity.cs" />
+    <Content Include="Properties\AndroidManifest.xml">
+      <Platforms>Android,Ouya</Platforms>
+    </Content>
+    <None Include="iOS\Info.plist">
+      <Link>Info.plist</Link>
+      <Platforms>iOS</Platforms>
+    </None>
+    <None Include="MacOS\Info.plist">
+      <Link>Info.plist</Link>
+      <Platforms>MacOS</Platforms>
+    </None>
+  </Files>
+</Project>

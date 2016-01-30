@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Module>
+  <Name>AugmentedBoardGame</Name>
+  <DefaultAction>resync</DefaultAction>
+  <GenerateNuGetRepositories>true</GenerateNuGetRepositories>
+  <Packages>
+    <Package Uri="http://protobuild.org/hach-que/Protogame" Folder="Protogame" GitRef="master" />
+  </Packages>
+</Module>
