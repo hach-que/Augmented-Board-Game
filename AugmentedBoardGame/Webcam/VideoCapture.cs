@@ -108,6 +108,7 @@ namespace AugmentedBoardGame.Webcam
                 var moniker = new IMoniker[1];
                 classEnum.Next(moniker.Length, moniker, IntPtr.Zero);
                 classEnum.Next(moniker.Length, moniker, IntPtr.Zero);
+                //classEnum.Next(moniker.Length, moniker, IntPtr.Zero);
                 var iid = typeof (IBaseFilter).GUID;
                 moniker[0].BindToObject(null, null, ref iid, out VideoInputObject);
                 Marshal.ReleaseComObject(moniker[0]);

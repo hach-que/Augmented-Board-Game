@@ -9,3 +9,4 @@ packages/**
 
 .vs/
 Protogame/
+AugmentedBoardGame/AugmentedBoardGame.Windows.csproj.user

@@ -10,6 +10,9 @@ namespace AugmentedBoardGame
         {
             kernel.Bind<IEntityFactory>().ToFactory();
             kernel.Bind<IAssetManager>().ToMethod(x => x.Kernel.Get<IAssetManagerProvider>().GetAssetManager());
+            kernel.Bind<IEventBinder<IGameContext>>().To<DesktopEventBinder>();
+            kernel.Bind<ISkin>().To<TransparentBasicSkin>();
+            kernel.Bind<IBasicSkin>().To<DefaultBasicSkin>();
         }
     }
 }
