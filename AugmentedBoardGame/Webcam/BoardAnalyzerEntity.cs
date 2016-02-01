@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -182,79 +183,94 @@ namespace AugmentedBoardGame.Webcam
         {
             while (true)
             {
-                var targetColor = _detectorEntity.DetectedColors.FirstOrDefault(x => x.Name == _analyzerColor);
-                if (targetColor == null)
+                try
                 {
-                    Thread.Sleep(1000);
-                    continue;
-                }
-
-                if (targetColor.RecognisedArray == null)
-                {
-                    Thread.Sleep(100);
-                    continue;
-                }
-
-                var detectedPoints = new List<Vector2>();
-
-                if (_checkArray == null ||
-                    _checkArray.GetLength(0) != targetColor.RecognisedArray.GetLength(0) ||
-                    _checkArray.GetLength(1) != targetColor.RecognisedArray.GetLength(1))
-                {
-                    _checkArray =
-                        new bool[targetColor.RecognisedArray.GetLength(0), targetColor.RecognisedArray.GetLength(1)];
-                }
-                else
-                {
-                    for (var x = 0; x < _checkArray.GetLength(0); x++)
+                    var targetColor = _detectorEntity.DetectedColors.FirstOrDefault(x => x.Name == _analyzerColor);
+                    if (targetColor == null)
                     {
-                        for (var y = 0; y < _checkArray.GetLength(1); y++)
-                        {
-                            _checkArray[x, y] = false;
-                        }
+                        Thread.Sleep(1000);
+                        continue;
                     }
-                }
 
-                for (var x = 0; x < targetColor.RecognisedArray.GetLength(0); x++)
-                {
-                    for (var y = 0; y < targetColor.RecognisedArray.GetLength(1); y++)
+                    if (targetColor.RecognisedArray == null)
                     {
-                        var score = targetColor.RecognisedArray[x, y] / targetColor.Sensitivity;
+                        Thread.Sleep(100);
+                        continue;
+                    }
 
-                        if (score > _pointThreshold && !_checkArray[x, y])
+                    var detectedPoints = new List<Vector2>();
+
+                    if (_checkArray == null ||
+                        _checkArray.GetLength(0) != targetColor.RecognisedArray.GetLength(0) ||
+                        _checkArray.GetLength(1) != targetColor.RecognisedArray.GetLength(1))
+                    {
+                        _checkArray =
+                            new bool[targetColor.RecognisedArray.GetLength(0), targetColor.RecognisedArray.GetLength(1)];
+                    }
+                    else
+                    {
+                        for (var x = 0; x < _checkArray.GetLength(0); x++)
                         {
-                            if (FloodFillCheckAt(targetColor, _checkArray, x, y))
+                            for (var y = 0; y < _checkArray.GetLength(1); y++)
                             {
-                                detectedPoints.Add(new Vector2(x, y));
+                                _checkArray[x, y] = false;
                             }
                         }
                     }
-                }
 
-                DetectedPoints = detectedPoints;
+                    for (var x = 0; x < targetColor.RecognisedArray.GetLength(0); x++)
+                    {
+                        for (var y = 0; y < targetColor.RecognisedArray.GetLength(1); y++)
+                        {
+                            var score = targetColor.RecognisedArray[x, y]/targetColor.Sensitivity;
 
-                // If we have four points, try and determine top-left, top-right, bottom-left and bottom-right.
-                if (DetectedPoints.Count == 4)
-                {
-                    TopLeft = DetectedPoints.OrderBy(x => x.X + x.Y).FirstOrDefault();
-                    TopRight = DetectedPoints.OrderBy(x => (_checkArray.GetLength(0) - x.X) + x.Y).FirstOrDefault();
-                    BottomLeft = DetectedPoints.OrderBy(x => x.X + (_checkArray.GetLength(1) - x.Y)).FirstOrDefault();
-                    BottomRight = DetectedPoints.OrderBy(x => (_checkArray.GetLength(0) - x.X) + (_checkArray.GetLength(1) - x.Y)).FirstOrDefault();
-                    TopLeftNormalized = new Vector2(TopLeft.Value.X / (float)_checkArray.GetLength(0), TopLeft.Value.Y / (float)_checkArray.GetLength(1));
-                    TopRightNormalized = new Vector2(TopRight.Value.X / (float)_checkArray.GetLength(0), TopRight.Value.Y / (float)_checkArray.GetLength(1));
-                    BottomLeftNormalized = new Vector2(BottomLeft.Value.X / (float)_checkArray.GetLength(0), BottomLeft.Value.Y / (float)_checkArray.GetLength(1));
-                    BottomRightNormalized = new Vector2(BottomRight.Value.X / (float)_checkArray.GetLength(0), BottomRight.Value.Y / (float)_checkArray.GetLength(1));
+                            if (score > _pointThreshold && !_checkArray[x, y])
+                            {
+                                if (FloodFillCheckAt(targetColor, _checkArray, x, y))
+                                {
+                                    detectedPoints.Add(new Vector2(x, y));
+                                }
+                            }
+                        }
+                    }
+
+                    DetectedPoints = detectedPoints;
+
+                    // If we have four points, try and determine top-left, top-right, bottom-left and bottom-right.
+                    if (DetectedPoints.Count == 4)
+                    {
+                        TopLeft = DetectedPoints.OrderBy(x => x.X + x.Y).FirstOrDefault();
+                        TopRight = DetectedPoints.OrderBy(x => (_checkArray.GetLength(0) - x.X) + x.Y).FirstOrDefault();
+                        BottomLeft =
+                            DetectedPoints.OrderBy(x => x.X + (_checkArray.GetLength(1) - x.Y)).FirstOrDefault();
+                        BottomRight =
+                            DetectedPoints.OrderBy(
+                                x => (_checkArray.GetLength(0) - x.X) + (_checkArray.GetLength(1) - x.Y))
+                                .FirstOrDefault();
+                        TopLeftNormalized = new Vector2(TopLeft.Value.X/(float) _checkArray.GetLength(0),
+                            TopLeft.Value.Y/(float) _checkArray.GetLength(1));
+                        TopRightNormalized = new Vector2(TopRight.Value.X/(float) _checkArray.GetLength(0),
+                            TopRight.Value.Y/(float) _checkArray.GetLength(1));
+                        BottomLeftNormalized = new Vector2(BottomLeft.Value.X/(float) _checkArray.GetLength(0),
+                            BottomLeft.Value.Y/(float) _checkArray.GetLength(1));
+                        BottomRightNormalized = new Vector2(BottomRight.Value.X/(float) _checkArray.GetLength(0),
+                            BottomRight.Value.Y/(float) _checkArray.GetLength(1));
+                    }
+                    else
+                    {
+                        TopLeft = null;
+                        TopRight = null;
+                        BottomLeft = null;
+                        BottomRight = null;
+                        TopLeftNormalized = null;
+                        TopRightNormalized = null;
+                        BottomLeftNormalized = null;
+                        BottomRightNormalized = null;
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    TopLeft = null;
-                    TopRight = null;
-                    BottomLeft = null;
-                    BottomRight = null;
-                    TopLeftNormalized = null;
-                    TopRightNormalized = null;
-                    BottomLeftNormalized = null;
-                    BottomRightNormalized = null;
+                    Debug.WriteLine(ex);
                 }
 
                 Thread.Sleep(20);

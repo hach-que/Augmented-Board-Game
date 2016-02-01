@@ -11,6 +11,7 @@ namespace AugmentedBoardGame
             kernel.Load<ProtogameCoreModule>();
             kernel.Load<ProtogameAssetIoCModule>();
             kernel.Load<ProtogameEventsIoCModule>();
+            kernel.Load<ProtogameSensorModule>();
             kernel.Load<AugmentedBoardGameModule>();
         }
 

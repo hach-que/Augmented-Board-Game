@@ -9,7 +9,7 @@ namespace AugmentedBoardGame
     {
         ExampleEntity CreateExampleEntity(string name);
 
-        WebcamEntity CreateWebcamEntity();
+        WebcamEntity CreateWebcamEntity(TextBox deviceName, TextBox width, TextBox height);
 
         DetectorEntity CreateDetectorEntity(WebcamEntity webcamEntity);
 

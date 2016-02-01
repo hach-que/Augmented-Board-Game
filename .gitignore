@@ -10,3 +10,4 @@ packages/**
 .vs/
 Protogame/
 AugmentedBoardGame/AugmentedBoardGame.Windows.csproj.user
+AugmentedBoardGame.Windows.sln.DotSettings.user

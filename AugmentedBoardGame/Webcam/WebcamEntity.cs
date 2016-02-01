@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 using Protogame;
 
@@ -11,44 +6,62 @@ namespace AugmentedBoardGame.Webcam
 {
     public class WebcamEntity : Entity
     {
-        private readonly I2DRenderUtilities _renderUtilities;
+        private readonly ICameraSensor _cameraSensor;
+        private readonly TextBox _deviceName;
 
-        private VideoCapture _videoCapture;
+        private readonly List<ICamera> _cameras;
 
-        public WebcamEntity(I2DRenderUtilities renderUtilities)
+        private int _activeCameraIndex;
+
+        public WebcamEntity(ISensorEngine sensorEngine, ICameraSensor cameraSensor, TextBox deviceName)
         {
-            _renderUtilities = renderUtilities;
+            _cameraSensor = cameraSensor;
+            _deviceName = deviceName;
+            _cameras = _cameraSensor.GetAvailableCameras();
+            _activeCameraIndex = 0;
+
+            _cameraSensor.ActiveCamera = _cameras[_activeCameraIndex];
+
+            // Because sensors may engage hardware, you need to explicitly register
+            // them with the sensor engine.
+            sensorEngine.Register(_cameraSensor);
         }
 
-        public Texture2D VideoCaptureFrame { get; set; }
-
-        public override void Render(IGameContext gameContext, IRenderContext renderContext)
+        public Texture2D VideoCaptureFrame
         {
-            base.Render(gameContext, renderContext);
-
-            if (renderContext.IsFirstRenderPass())
-            {
-                if (_videoCapture == null)
-                {
-                    _videoCapture = new VideoCapture(renderContext.GraphicsDevice);
-                }
-
-                // Access this variable to update the webcam data.
-                VideoCaptureFrame = _videoCapture.Frame;
-            }
+            get { return _cameraSensor.VideoCaptureFrame; }
         }
 
         public byte[] UnlockedFrameRGBA
         {
-            get
-            {
-                if (_videoCapture == null)
-                {
-                    return null;
-                }
+            get { return _cameraSensor.VideoCaptureUnlockedRGBA; }
+        }
 
-                return _videoCapture.UnlockedFrameRGBA;
+        public int ImageWidth
+        {
+            get { return _cameraSensor.VideoCaptureWidth.Value; }
+        }
+
+        public int ImageHeight
+        {
+            get { return _cameraSensor.VideoCaptureHeight.Value; }
+        }
+
+        public void NextDevice()
+        {
+            _activeCameraIndex++;
+            if (_activeCameraIndex >= _cameras.Count)
+            {
+                _activeCameraIndex = 0;
             }
+            _cameraSensor.ActiveCamera = _cameras[_activeCameraIndex];
+        }
+
+        public override void Update(IGameContext gameContext, IUpdateContext updateContext)
+        {
+            base.Update(gameContext, updateContext);
+
+            _deviceName.Text = _cameras[_activeCameraIndex].Name;
         }
     }
 }

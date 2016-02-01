@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using Protogame;
@@ -23,8 +24,6 @@ namespace AugmentedBoardGame.Webcam
 
     public class DetectorEntity : Entity
     {
-        private const int imageWidth = 640;
-        private const int imageHeight = 480;
         private const int chunkSize = 5;
         private readonly IAssetManager _assetManager;
         private readonly FontAsset _defaultFont;
@@ -49,10 +48,6 @@ namespace AugmentedBoardGame.Webcam
             _renderUtilities = renderUtilities;
             _defaultFont = _assetManager.Get<FontAsset>("font.Default");
 
-            _thread = new Thread(ProcessorThread);
-            _thread.IsBackground = true;
-            _thread.Start();
-
             _colorsToDetect = new List<ColorToDetect>
             {
                 new ColorToDetect {Color = new Color(1f, 0f, 0f), Name = "Red"},
@@ -65,6 +60,10 @@ namespace AugmentedBoardGame.Webcam
             _currentColor = _colorsToDetect[_currentIndex];
 
             GlobalSensitivity = 1/10000000f*25f;
+
+            _thread = new Thread(ProcessorThread);
+            _thread.IsBackground = true;
+            _thread.Start();
         }
 
         public List<ColorToDetect> DetectedColors => _colorsToDetect;
@@ -148,52 +147,58 @@ namespace AugmentedBoardGame.Webcam
         {
             while (true)
             {
-                var total = 0;
-
-                foreach (var color in _colorsToDetect)
+                try
                 {
-                    color.UnlockedTotalDetected = 0;
-                }
+                    var total = 0;
 
-                var copy = _webcamEntity.UnlockedFrameRGBA;
-                if (copy != null)
-                {
-                    for (var x = 0; x < imageWidth/chunkSize; x++)
+                    foreach (var color in _colorsToDetect)
                     {
-                        for (var y = 0; y < imageHeight/chunkSize; y++)
+                        color.UnlockedTotalDetected = 0;
+                    }
+
+                    var copy = _webcamEntity.UnlockedFrameRGBA;
+                    if (copy != null)
+                    {
+                        for (var x = 0; x < _webcamEntity.ImageWidth/chunkSize; x++)
                         {
-                            foreach (var color in _colorsToDetect)
+                            for (var y = 0; y < _webcamEntity.ImageHeight/chunkSize; y++)
                             {
-                                var rT = color.Color.R;
-                                var gT = color.Color.G;
-                                var bT = color.Color.B;
-
-                                //var totalOnTarget = rT + gT + bT;
-
-                                var rI = 255 - color.Color.R;
-                                var gI = 255 - color.Color.G;
-                                var bI = 255 - color.Color.B;
-
-                                //var totalOffTarget = rI + gI + bI;
-
-                                if (color.RecognisedArray == null)
+                                foreach (var color in _colorsToDetect)
                                 {
-                                    color.RecognisedArray = new int[imageWidth/chunkSize, imageHeight/chunkSize];
-                                }
+                                    var rT = color.Color.R;
+                                    var gT = color.Color.G;
+                                    var bT = color.Color.B;
 
-                                var chunkScore = 0;
-                                for (var xx = 0; xx < chunkSize; xx++)
-                                {
-                                    for (var yy = 0; yy < chunkSize; yy++)
+                                    //var totalOnTarget = rT + gT + bT;
+
+                                    var rI = 255 - color.Color.R;
+                                    var gI = 255 - color.Color.G;
+                                    var bI = 255 - color.Color.B;
+
+                                    //var totalOffTarget = rI + gI + bI;
+
+                                    if (color.RecognisedArray == null ||
+                                        color.RecognisedArray.GetLength(0) != _webcamEntity.ImageWidth/chunkSize ||
+                                        color.RecognisedArray.GetLength(1) != _webcamEntity.ImageHeight/chunkSize)
                                     {
-                                        var idx = (x*chunkSize + xx + (y*chunkSize + yy)*imageWidth)*4;
-                                        var rA = copy[idx];
-                                        var gA = copy[idx + 1];
-                                        var bA = copy[idx + 2];
+                                        color.RecognisedArray =
+                                            new int[_webcamEntity.ImageWidth/chunkSize,
+                                                _webcamEntity.ImageHeight/chunkSize];
+                                    }
 
-                                        var illumination = (rA + gA + bA)/3f/255f;
+                                    var chunkScore = 0;
+                                    for (var xx = 0; xx < chunkSize; xx++)
+                                    {
+                                        for (var yy = 0; yy < chunkSize; yy++)
+                                        {
+                                            var idx = (x*chunkSize + xx + (y*chunkSize + yy)*_webcamEntity.ImageWidth)*4;
+                                            var rA = copy[idx];
+                                            var gA = copy[idx + 1];
+                                            var bA = copy[idx + 2];
 
-                                        /*
+                                            var illumination = (rA + gA + bA)/3f/255f;
+
+                                            /*
 
                                         T:   255, 0, 0                                   200 - (200 + 200) / 2
                                         A:   200, 200, 200
@@ -229,34 +234,39 @@ namespace AugmentedBoardGame.Webcam
 
     */
 
-                                        var redOnTarget = 255 - Math.Abs(rT - rA);
-                                        var greenOnTarget = 255 - Math.Abs(gT - gA);
-                                        var blueOnTarget = 255 - Math.Abs(bT - bA);
-                                        var onTarget = (int) ((redOnTarget + greenOnTarget + blueOnTarget)/1f);
+                                            var redOnTarget = 255 - Math.Abs(rT - rA);
+                                            var greenOnTarget = 255 - Math.Abs(gT - gA);
+                                            var blueOnTarget = 255 - Math.Abs(bT - bA);
+                                            var onTarget = (int) ((redOnTarget + greenOnTarget + blueOnTarget)/1f);
                                             //(float)totalOnTarget * 255f
 
-                                        var redOffTarget = 255 - Math.Abs(rI - rA);
-                                        var greenOffTarget = 255 - Math.Abs(gI - gA);
-                                        var blueOffTarget = 255 - Math.Abs(bI - bA);
-                                        var offTarget = (int) ((redOffTarget + greenOffTarget + blueOffTarget)/0.5f);
+                                            var redOffTarget = 255 - Math.Abs(rI - rA);
+                                            var greenOffTarget = 255 - Math.Abs(gI - gA);
+                                            var blueOffTarget = 255 - Math.Abs(bI - bA);
+                                            var offTarget = (int) ((redOffTarget + greenOffTarget + blueOffTarget)/0.5f);
                                             // (float)totalOffTarget * 255f
 
-                                        chunkScore += (int) ((onTarget - offTarget)*illumination);
-                                        color.UnlockedTotalDetected += (int) (illumination*255f);
+                                            chunkScore += (int) ((onTarget - offTarget)*illumination);
+                                            color.UnlockedTotalDetected += (int) (illumination*255f);
+                                        }
                                     }
-                                }
 
-                                color.RecognisedArray[x, y] = chunkScore;
-                                //color.UnlockedTotalDetected += chunkScore;
+                                    color.RecognisedArray[x, y] = chunkScore;
+                                    //color.UnlockedTotalDetected += chunkScore;
+                                }
                             }
                         }
                     }
-                }
 
-                foreach (var color in _colorsToDetect)
+                    foreach (var color in _colorsToDetect)
+                    {
+                        color.Sensitivity = Math.Max(0, color.TotalDetected)*GlobalSensitivity;
+                        color.TotalDetected = color.UnlockedTotalDetected;
+                    }
+                }
+                catch (Exception ex)
                 {
-                    color.Sensitivity = Math.Max(0, color.TotalDetected)*GlobalSensitivity;
-                    color.TotalDetected = color.UnlockedTotalDetected;
+                    Debug.WriteLine(ex);
                 }
 
                 Thread.Sleep(20);
