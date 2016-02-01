@@ -29,7 +29,6 @@
     <Compile Include="Webcam\BoardAnalyzerEntity.cs" />
     <Compile Include="Webcam\BoardRendererEntity.cs" />
     <Compile Include="Webcam\DetectorEntity.cs" />
-    <Compile Include="Webcam\VideoCapture.cs" />
     <Compile Include="Webcam\WebcamEntity.cs" />
     <Content Include="Properties\AndroidManifest.xml">
       <Platforms>Android,Ouya</Platforms>
